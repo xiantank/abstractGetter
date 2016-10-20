@@ -4,6 +4,7 @@ class AbstractGetter {
 				this.aca = new ACA();
 				this.slideType = options.slideType || "char" || "sentence";
 				this.slideSize = options.slideSize || 300;
+				this.maxCharLength = options.maxLength ||( (this.slideType==="char") && this.slideSize) || 300;
 				this.maxParagraph = options.maxParagraph || 3;
 				this.isInSlide = (options.isInSlide && options.isInSlide.bind(this)) || ((this.slideType === "char") ? this.isInCharSlide : this.isInSentenceSlide);
 				this.getDistance = (options.getDistance && options.getDistance.bind(this)) || ((this.slideType === "char") ? this.getDistanceByChar : this.getDistanceBySentence)
@@ -16,18 +17,8 @@ class AbstractGetter {
 		getDistanceBySentence(start, end) {
 				let cnt = 0;
 				for (let i = start; i < end; i++) {
-						switch (this.article[i]) {
-								case ',':
-								case '.':
-								case '?':
-								case '!':
-								case '，':
-								case '。':
-								case '？':
-								case '！':
-										cnt++;
-										break;
-								default:
+						if(this.isSentenceBreak(i)){
+								cnt++;
 						}
 						// if (cnt >= this.slideSize) {
 						// 		break;
@@ -58,11 +49,6 @@ class AbstractGetter {
 						return "";
 				}
 				let paragraphs = this.getAbstractBySlideWindow(indexesArray);
-				paragraphs = paragraphs.map((paragraph)=> {
-						//return article.slice(paragraph.start, paragraph.start + this.slideSize);
-						console.log(paragraph.start);
-						return article.slice(paragraph.start, paragraph.endStart);
-				});
 				this.article = undefined;
 				return paragraphs;
 
@@ -96,7 +82,7 @@ class AbstractGetter {
 								break;
 						}
 				}
-				return [i + 1, j+1];
+				return [i + 1, j];
 		}
 
 		getAbstractBySlideWindow(indexObjArray) {
@@ -118,22 +104,33 @@ class AbstractGetter {
 				indexesArray.sort((a, b)=> {
 						return a.index - b.index;
 				});
-				let result = [];
+				let paragraphs = [];
+				let totalLength = 0;
 				for (let i = 0; (keys.length > 0) && (i < this.maxParagraph); i++) {
 						let paragraph = this._getAbstractBySlideWindow(indexesArray);
 						let position = this.getFullSentence(paragraph.start, paragraph.endStart);
 						paragraph.start = position[0];
 						paragraph.endStart = position[1];
-						result.push(paragraph);
 						keys = keys.filter(function (key) {
 								return paragraph.keys.indexOf(key) === -1;
 						});
 						indexesArray = indexesArray.filter((indexes)=> {
 								return paragraph.keys.indexOf(indexes.key) === -1;
 						});
+						let content = this.article.slice(paragraph.start, paragraph.endStart+1)
+						totalLength += content.length;
+						if(totalLength > this.maxCharLength){
+								break;
+						}
+						paragraphs.push(content);
 				}
+				/*paragraphs = paragraphs.map((paragraph)=> {
+						//return article.slice(paragraph.start, paragraph.start + this.slideSize);
+						console.log(paragraph.start);
+						return this.article.slice(paragraph.start, paragraph.endStart+1);
+				});*/
 
-				return result;
+				return paragraphs;
 		}
 
 		_getAbstractBySlideWindow(indexesArray) {
