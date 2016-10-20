@@ -6,7 +6,6 @@ class AbstractGetter {
 				this.slideSize = options.slideSize || 300;
 				this.maxCharLength = options.maxLength ||( (this.slideType==="char") && this.slideSize) || 300;
 				this.maxParagraph = options.maxParagraph || 3;
-				this.isInSlide = (options.isInSlide && options.isInSlide.bind(this)) || ((this.slideType === "char") ? this.isInCharSlide : this.isInSentenceSlide);
 				this.getDistance = (options.getDistance && options.getDistance.bind(this)) || ((this.slideType === "char") ? this.getDistanceByChar : this.getDistanceBySentence)
 		}
 
@@ -20,9 +19,6 @@ class AbstractGetter {
 						if(this.isSentenceBreak(i)){
 								cnt++;
 						}
-						// if (cnt >= this.slideSize) {
-						// 		break;
-						// }
 				}
 				return cnt;
 		}
@@ -124,11 +120,6 @@ class AbstractGetter {
 						}
 						paragraphs.push(content);
 				}
-				/*paragraphs = paragraphs.map((paragraph)=> {
-						//return article.slice(paragraph.start, paragraph.start + this.slideSize);
-						console.log(paragraph.start);
-						return this.article.slice(paragraph.start, paragraph.endStart+1);
-				});*/
 
 				return paragraphs;
 		}
@@ -229,7 +220,6 @@ class AbstractGetter {
 				wordMap.set(indexesArray[0].key, indexesArray[0].index);
 				for (let i = 0; i < indexesArray.length; i++) {
 						let current = indexesArray[i];
-						//if ((current.index - wordMap.min) <= this.slideSize) {
 						if (this.getDistance(wordMap.min, current.index) <= this.slideSize) {
 								wordMap.set(current.key, current.index);
 								keyCnt = wordMap.size;
@@ -249,7 +239,6 @@ class AbstractGetter {
 								}
 						} else {
 								for (; ;) { // remove out of slideSize
-										//if (((current.index - wordMap.min) <= this.slideSize)
 										if (this.getDistance(wordMap.min, current.index) <= this.slideSize
 											|| (current.index === wordMap.min)
 											|| !wordMap.size
