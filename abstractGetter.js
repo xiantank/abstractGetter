@@ -61,11 +61,42 @@ class AbstractGetter {
 				paragraphs = paragraphs.map((paragraph)=> {
 						//return article.slice(paragraph.start, paragraph.start + this.slideSize);
 						console.log(paragraph.start);
-						return article.slice(paragraph.start, paragraph.start + 100);
+						return article.slice(paragraph.start, paragraph.endStart);
 				});
 				this.article = undefined;
 				return paragraphs;
 
+		}
+
+		isSentenceBreak(i) {
+				switch (this.article[i]) {
+						case ',':
+						case '.':
+						case '?':
+						case '!':
+						case '，':
+						case '。':
+						case '？':
+						case '！':
+								return true;
+						default:
+				}
+				return false;
+		}
+
+		getFullSentence(start, endStart) {
+				let i, j;
+				for (i = start; i >= 0; i--) {
+						if (this.isSentenceBreak(i)) {
+								break;
+						}
+				}
+				for (j = endStart; j < this.article.length; j++) {
+						if (this.isSentenceBreak(j)) {
+								break;
+						}
+				}
+				return [i + 1, j+1];
 		}
 
 		getAbstractBySlideWindow(indexObjArray) {
@@ -90,6 +121,9 @@ class AbstractGetter {
 				let result = [];
 				for (let i = 0; (keys.length > 0) && (i < this.maxParagraph); i++) {
 						let paragraph = this._getAbstractBySlideWindow(indexesArray);
+						let position = this.getFullSentence(paragraph.start, paragraph.endStart);
+						paragraph.start = position[0];
+						paragraph.endStart = position[1];
 						result.push(paragraph);
 						keys = keys.filter(function (key) {
 								return paragraph.keys.indexOf(key) === -1;
